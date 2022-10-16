@@ -1,19 +1,16 @@
-/* Tamaguino
- by Alojz Jakob <http://jakobdesign.com>
-
- ********** TAMAGUINO ***********
- * Tamagotchi clone for Arduino *
- ********************************
- 
-*/
 
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_SH110X.h>
 
-#define OLED_RESET 4
-Adafruit_SSD1306 display(OLED_RESET);
+#define i2c_Address 0x3c //initialize with the I2C addr 0x3C Typically eBay OLED's
+
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define OLED_RESET -1   //   QT-PY / XIAO
+Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const int button1Pin = 9;
 const int button2Pin = 8; 
@@ -410,25 +407,34 @@ int poops [3] = {
   0,0,0,
 };
 
+#define ACTIVATED LOW
+
 void setup() {
   pinMode(button1Pin, INPUT);
   pinMode(button2Pin, INPUT);
   pinMode(button3Pin, INPUT);
+
+  digitalWrite(button1Pin, HIGH);
+  digitalWrite(button2Pin, HIGH);
+  digitalWrite(button3Pin, HIGH);
+  // or just 
+  // pinMode(button1Pin, INPUT_PULLUP)
+  // etc
+  
   pinMode(sound, OUTPUT);
 
   pinMode(13,OUTPUT);
 
   randomSeed(analogRead(0));
 
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.begin(i2c_Address, true); // Address 0x3C default
   display.clearDisplay();
 
   // splash
-  display.setTextColor(WHITE);
-  //display.println(F("jakobdesign presents")); 
-  display.print(F(" jakobdesign presents")); 
-  display.drawBitmap(15, 24, splash1 , 48, 26, WHITE);
-  display.drawBitmap(48, 24, splash2 , 80, 40, WHITE);
+  display.setTextColor(SH110X_WHITE);
+  display.print(F(" Para  Nicolas")); 
+  display.drawBitmap(15, 24, splash1 , 48, 26, SH110X_WHITE);
+  display.drawBitmap(48, 24, splash2 , 80, 40, SH110X_WHITE);
   display.display();
   
   //splash tone
@@ -536,7 +542,7 @@ void loop() {
     /* ------- BUTTON PRESS ACTIONS ------- */
     
     /* ------- BUTTON 1 - MENU ------- */
-    if(button1State==HIGH){
+    if(button1State==ACTIVATED){
       
       // JUMP IN GAME
       if(game){
@@ -588,7 +594,7 @@ void loop() {
       
     }
     /* ------- BUTTON 2 - SELECT ------- */
-    if(button2State==HIGH){
+    if(button2State==ACTIVATED){
       
       if(game){
         if(!gameOver){
@@ -639,7 +645,7 @@ void loop() {
       
     }
     /* ------- BUTTON 3 - BACK ------- */
-    if(button3State==HIGH){
+    if(button3State==ACTIVATED){
       if(soundEnabled){
         tone(sound,1000,80);
       }
@@ -697,10 +703,10 @@ void loop() {
     }
     
     if(!sunOrMoon){
-      display.fillCircle(sunXPos,2*sunRadius,sunRadius,WHITE);
+      display.fillCircle(sunXPos,2*sunRadius,sunRadius,SH110X_WHITE);
     }else{
-      display.fillCircle(sunXPos,2*sunRadius,sunRadius,WHITE);
-      display.fillCircle(sunXPos-moonShadow,2*sunRadius,sunRadius,BLACK);
+      display.fillCircle(sunXPos,2*sunRadius,sunRadius,SH110X_WHITE);
+      display.fillCircle(sunXPos-moonShadow,2*sunRadius,sunRadius,SH110X_BLACK);
       //if(walkPos == 5){
       if(round(cloud1XPos) % 5 == 0){
         for(int i=0;i<6;i++){
@@ -710,7 +716,7 @@ void loop() {
       }else{
         for(int i=0;i<6;i++){
           
-          display.drawPixel(stars[i][0],stars[i][1],WHITE);
+          display.drawPixel(stars[i][0],stars[i][1],SH110X_WHITE);
         }
       }
     }
@@ -720,11 +726,11 @@ void loop() {
     if(cloud1XPos<-cloud1Width){
       cloud1XPos=display.width()+cloud1Width;
     }
-    display.drawBitmap(cloud1XPos, 5, cloud2 , cloud1Width, 5, WHITE);
+    display.drawBitmap(cloud1XPos, 5, cloud2 , cloud1Width, 5, SH110X_WHITE);
 
     
     //mountains
-    display.drawBitmap(0, 7, mountains , 128, 16, WHITE);
+    display.drawBitmap(0, 7, mountains , 128, 16, SH110X_WHITE);
   
     //walk and move ground perspective
 
@@ -816,13 +822,13 @@ void loop() {
       if(treesXPos==display.width()){treesXPos=-128;}
 
       if(jumping){
-        display.drawBitmap(10, 26-jumpPos, dinoJump , 48, 24, WHITE);
+        display.drawBitmap(10, 26-jumpPos, dinoJump , 48, 24, SH110X_WHITE);
       }else{
-        display.drawBitmap(10, 26, dinoWalk[walkPos] , 48, 24, WHITE);
+        display.drawBitmap(10, 26, dinoWalk[walkPos] , 48, 24, SH110X_WHITE);
       }
 
       for(int i=0;i<display.width()/4+1;i++){
-        display.drawBitmap(-walkXPos+i*8, 50, grass , 8, 6, WHITE);
+        display.drawBitmap(-walkXPos+i*8, 50, grass , 8, 6, SH110X_WHITE);
       }
 
 
@@ -837,7 +843,7 @@ void loop() {
         obstacle1XPos=0;
       }
       if(obstacle1show){
-        display.drawBitmap(display.width()-obstacle1XPos, 44, obstacle1 , 16, 6, WHITE);
+        display.drawBitmap(display.width()-obstacle1XPos, 44, obstacle1 , 16, 6, SH110X_WHITE);
       }
 
       // obstacles 2
@@ -851,7 +857,7 @@ void loop() {
       }
       
       if(obstacle2show){
-        display.drawBitmap(display.width()-obstacle2XPos, 44, obstacle2 , 16, 6, WHITE);
+        display.drawBitmap(display.width()-obstacle2XPos, 44, obstacle2 , 16, 6, SH110X_WHITE);
       }
 
 
@@ -859,27 +865,27 @@ void loop() {
       
       //draw front grass
       for(int i=0;i<display.width()/16+1;i++){
-        display.drawBitmap(-grassXPos+i*32, 60, grass_front , 32, 8, WHITE);
+        display.drawBitmap(-grassXPos+i*32, 60, grass_front , 32, 8, SH110X_WHITE);
       }
       //draw trees
-      display.drawBitmap(-treesXPos, 23, trees , 112, 20, WHITE);
+      display.drawBitmap(-treesXPos, 23, trees , 112, 20, SH110X_WHITE);
 
       if(!gameOver){
         display.setCursor(0,56);
-        display.setTextColor(WHITE);
+        display.setTextColor(SH110X_WHITE);
         display.print(F("lvl: "));
         display.print(level);
         display.setCursor(64,56);
-        display.setTextColor(WHITE);
+        display.setTextColor(SH110X_WHITE);
         display.print(F("pts: "));
         display.print(score);
       }
 
       if(paused && round(cloud1XPos)%2==0){
-        display.fillRect(24,11,80,15,BLACK);
-        display.fillRect(25,12,78,13,WHITE);
+        display.fillRect(24,11,80,15,SH110X_BLACK);
+        display.fillRect(25,12,78,13,SH110X_WHITE);
         display.setCursor(47,15);
-        display.setTextColor(BLACK);
+        display.setTextColor(SH110X_BLACK);
         display.println(F("PAUSED"));
       }
       
@@ -889,9 +895,9 @@ void loop() {
       
       /* ------ NO GAME -----*/
       if(!sleeping){
-        display.drawBitmap(walkXPos, 26, dinoWalk[walkPos+walkDirOffset] , 48, 24, WHITE);
+        display.drawBitmap(walkXPos, 26, dinoWalk[walkPos+walkDirOffset] , 48, 24, SH110X_WHITE);
       }else{
-        display.drawBitmap(walkXPos, 29, dinoWalk[walkPos+walkDirOffset] , 48, 24, WHITE);
+        display.drawBitmap(walkXPos, 29, dinoWalk[walkPos+walkDirOffset] , 48, 24, SH110X_WHITE);
         if(walkRight){
           if(round(cloud1XPos) % 3 ==0){
             display.setCursor(walkXPos+48,36);
@@ -928,20 +934,20 @@ void loop() {
       
       //draw grass (ground)
       for(int i=0;i<2*display.width()/4;i++){
-        display.drawBitmap(-walkXPos+i*8, 50, grass , 8, 6, WHITE);
+        display.drawBitmap(-walkXPos+i*8, 50, grass , 8, 6, SH110X_WHITE);
       }
       // draw poops
       for(int i=0; i<3; i++){
         if(poops[i]>0){
-          display.drawBitmap(-walkXPos+poops[i], 44, poop , 16, 6, WHITE);
+          display.drawBitmap(-walkXPos+poops[i], 44, poop , 16, 6, SH110X_WHITE);
         }
       }
       //draw front grass
       for(int i=0;i<2*display.width()/16;i++){
-        display.drawBitmap(-grassXPos+i*32, 56, grass_front , 32, 8, WHITE);
+        display.drawBitmap(-grassXPos+i*32, 56, grass_front , 32, 8, SH110X_WHITE);
       }
       //draw trees
-      display.drawBitmap(-treesXPos, 23, trees , 112, 20, WHITE);
+      display.drawBitmap(-treesXPos, 23, trees , 112, 20, SH110X_WHITE);
 
 
         
@@ -961,30 +967,30 @@ void loop() {
     /* ------- MENUS AND ACTIONS ------- */
     //render menu
     if(menuOpened and !game){
-      display.fillRect(0,0,display.width(),30,BLACK);
-      display.drawRect(0,0,display.width(),29,WHITE);
-      display.fillRect(1,1,display.width()-2,27,BLACK);
-      display.drawRect(0,0,display.width(),12,WHITE);
+      display.fillRect(0,0,display.width(),30,SH110X_BLACK);
+      display.drawRect(0,0,display.width(),29,SH110X_WHITE);
+      display.fillRect(1,1,display.width()-2,27,SH110X_BLACK);
+      display.drawRect(0,0,display.width(),12,SH110X_WHITE);
       display.setCursor(8,2);
       display.setTextSize(1);
       if(menuDepth){
-        display.fillRect(0,0,display.width(),12,WHITE);
-        display.fillRect(1,18,1,5,WHITE);
-        display.fillRect(2,19,1,3,WHITE);
-        display.fillRect(3,20,1,1,WHITE);
-        display.setTextColor(BLACK,WHITE);
+        display.fillRect(0,0,display.width(),12,SH110X_WHITE);
+        display.fillRect(1,18,1,5,SH110X_WHITE);
+        display.fillRect(2,19,1,3,SH110X_WHITE);
+        display.fillRect(3,20,1,1,SH110X_WHITE);
+        display.setTextColor(SH110X_BLACK,SH110X_WHITE);
       }else{
-        display.fillRect(1,3,1,5,WHITE);
-        display.fillRect(2,4,1,3,WHITE);
-        display.fillRect(3,5,1,1,WHITE);
-        display.setTextColor(WHITE);
+        display.fillRect(1,3,1,5,SH110X_WHITE);
+        display.fillRect(2,4,1,3,SH110X_WHITE);
+        display.fillRect(3,5,1,1,SH110X_WHITE);
+        display.setTextColor(SH110X_WHITE);
       }
       char oneItem [STRING_SIZE];
       memcpy_P (&oneItem, &mainMenu[menu][0], sizeof oneItem);
       //display.println(getItem(menu,0));
       display.println(oneItem);
       if(subMenu){
-        display.setTextColor(WHITE);
+        display.setTextColor(SH110X_WHITE);
         display.setCursor(8,16);
         char subItem [STRING_SIZE];
         memcpy_P (&subItem, &mainMenu[menu][subMenu], sizeof subItem);
@@ -1013,33 +1019,33 @@ void loop() {
 
         //animate eating
         
-        display.fillRect(0,0,display.width(),display.height(),BLACK);
+        display.fillRect(0,0,display.width(),display.height(),SH110X_BLACK);
         for(int j=0;j<3;j++){
           for(int i=0; i<4; i++){
             display.clearDisplay();
             switch(action){
               case 101:
                 //apple
-                display.drawBitmap(50,40,apple,24,24,WHITE);
-                if(j>0) display.fillCircle(76,54,12,BLACK);
-                if(j==2) display.fillCircle(47,55,12,BLACK);
+                display.drawBitmap(50,40,apple,24,24,SH110X_WHITE);
+                if(j>0) display.fillCircle(76,54,12,SH110X_BLACK);
+                if(j==2) display.fillCircle(47,55,12,SH110X_BLACK);
                 break;
               case 102:
                 //steak
-                display.drawBitmap(50,40,steak,24,24,WHITE);
-                if(j>0) display.fillCircle(76,59,13,BLACK);
-                if(j==2) display.fillCircle(60,63,13,BLACK);
+                display.drawBitmap(50,40,steak,24,24,SH110X_WHITE);
+                if(j>0) display.fillCircle(76,59,13,SH110X_BLACK);
+                if(j==2) display.fillCircle(60,63,13,SH110X_BLACK);
                 break;
               case 103:
                 //water ripples
-                display.drawCircle(80,55,1+1*i,WHITE);
-                display.drawCircle(80,55,5+2*i,WHITE);
-                display.drawCircle(80,55,10+4*i,WHITE);
+                display.drawCircle(80,55,1+1*i,SH110X_WHITE);
+                display.drawCircle(80,55,5+2*i,SH110X_WHITE);
+                display.drawCircle(80,55,10+4*i,SH110X_WHITE);
                 break;
               
 
             }
-            display.drawBitmap(80,24,eating[i],48,40,WHITE);
+            display.drawBitmap(80,24,eating[i],48,40,SH110X_WHITE);
             delay(150);
             display.display();
           }
@@ -1129,8 +1135,8 @@ void loop() {
               for(int i=0;i<5;i++){
                 display.clearDisplay();
                 if(i%2!=0){
-                  display.fillRect(32,23,64,16,WHITE);
-                  display.fillRect(56,0,16,64,WHITE);
+                  display.fillRect(32,23,64,16,SH110X_WHITE);
+                  display.fillRect(56,0,16,64,SH110X_WHITE);
                 }
                 display.display();
                 delay(300);
@@ -1189,7 +1195,7 @@ void loop() {
         display.println(F("get smarter"));
       }
       if(setting==701 || setting==702 || setting==703 || setting==704){
-        display.drawRect(70,17,52,7,WHITE);
+        display.drawRect(70,17,52,7,SH110X_WHITE);
       }
       if(setting==701){
         drawBar(hunger);
@@ -1231,12 +1237,12 @@ void loop() {
         notificationBlink=0;
       }
       if(notificationBlink!=1){
-        display.drawRect(117,28,11,11,WHITE);
-        display.setTextColor(WHITE);
+        display.drawRect(117,28,11,11,SH110X_WHITE);
+        display.setTextColor(SH110X_WHITE);
         digitalWrite(13,LOW);
       }else{
-        display.fillRect(117,28,11,11,WHITE);
-        display.setTextColor(BLACK);
+        display.fillRect(117,28,11,11,SH110X_WHITE);
+        display.setTextColor(SH110X_BLACK);
         digitalWrite(13,HIGH);
       }
       display.setCursor(120,30);
@@ -1251,13 +1257,13 @@ void loop() {
       
 
       
-      display.fillRect(15,11,98,43,BLACK);
-      display.drawRect(16,12,96,41,WHITE);
-      display.fillRect(16,12,96,13,WHITE);
+      display.fillRect(15,11,98,43,SH110X_BLACK);
+      display.drawRect(16,12,96,41,SH110X_WHITE);
+      display.fillRect(16,12,96,13,SH110X_WHITE);
       display.setCursor(36,15);
-      display.setTextColor(BLACK);
+      display.setTextColor(SH110X_BLACK);
       display.println(F("GAME OVER"));
-      display.setTextColor(WHITE);
+      display.setTextColor(SH110X_WHITE);
       display.setCursor(21,29);
       if(newHiScore){
         display.println(F("NEW HI-SCORE!"));
@@ -1278,7 +1284,7 @@ void loop() {
     //dead...
     display.clearDisplay();
     display.setCursor(0,0);
-    display.setTextColor(WHITE);
+    display.setTextColor(SH110X_WHITE);
     display.println(F("Pet died...\n\nPress button 1\nto restart"));
     display.display();
 
@@ -1302,7 +1308,7 @@ void loop() {
 
 
 void drawBar(float value){
-  display.fillRect(72,19,48*value/100,3,WHITE);
+  display.fillRect(72,19,48*value/100,3,SH110X_WHITE);
 }
 
 char* getItem(int menu, int index){

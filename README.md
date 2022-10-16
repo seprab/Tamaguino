@@ -6,7 +6,7 @@ https://alojzjakob.github.io/Tamaguino/
 
 I had to edit part of the code since my OLED screen seems to contain a SH1106 controller. The original project is compatible with SSD1306 controller which is different to the screen I got.
 
-How did I realize it? I found another user having the same issue as me and the community suggested 
+How did I realize it? I found another user having the same issue as me and the community helped. 
 
 <img src="https://aws1.discourse-cdn.com/arduino/optimized/4X/c/2/d/c2d21426ff543d3b5d3caf9807e0a7c260ae3ef7_2_440x500.jpeg"
      alt="Example of the problem"
@@ -21,3 +21,4 @@ At the moment, this project requires:
 - [Adafruit SH110X by Adafruit Version 2.1.8](https://github.com/adafruit/Adafruit_SH110X)
 
 
+On the other hand, I am editing the project for complete as I plan to create something for my son, in spanish, and I'll see what else to remove, add or modify.
